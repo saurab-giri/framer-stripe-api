@@ -2,22 +2,29 @@
 const stripe = require("stripe")("sk_test_51NOfYxKa6RpLAVkAs06VQh9xS8Dc1TjxjawN5TxwPSqwMWBq9BnzJFjajNUE5K7bnzvBhbKYrnRbzdHBYf6l18Od00sssjhnvM");
 
 module.exports = async (req, res) => {
-  // Set CORS headers for all responses
-  res.setHeader("Access-Control-Allow-Origin", "https://robocodev.framer.website"); // Your Framer site
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS"); // Allowed methods
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type"); // Allowed headers
+  res.setHeader("Access-Control-Allow-Origin", "https://robocodev.framer.website");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  // Handle preflight OPTIONS request
   if (req.method === "OPTIONS") {
-    return res.status(200).end(); // Respond with 200 OK for preflight
+    return res.status(200).end();
   }
 
-  // Handle POST request
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
   const { name, price } = req.body;
+
+  // Log the raw input for debugging
+  console.log("Request body:", req.body);
+
+  // Validate price
+  const priceInCents = Math.round(Number(price) * 100);
+  if (isNaN(priceInCents) || priceInCents <= 0) {
+    console.error("Invalid price value:", price);
+    return res.status(400).json({ error: "Invalid price: must be a positive number" });
+  }
 
   try {
     const session = await stripe.checkout.sessions.create({
@@ -27,19 +34,19 @@ module.exports = async (req, res) => {
           price_data: {
             currency: "usd",
             product_data: { name: name || "Unnamed Product" },
-            unit_amount: price * 100,
+            unit_amount: priceInCents,
           },
           quantity: 1,
         },
       ],
       mode: "payment",
-      success_url: "https://robocodev.framer.website/success", // Update if needed
-      cancel_url: "https://robocodev.framer.website/cancel",   // Update if needed
+      success_url: "https://robocodev.framer.website/success",
+      cancel_url: "https://robocodev.framer.website/cancel",
     });
 
     res.status(200).json({ url: session.url });
   } catch (error) {
-    console.error("Stripe error:", error);
-    res.status(500).json({ error: "Failed to create checkout session" });
+    console.error("Stripe error:", error.message);
+    res.status(500).json({ error: "Failed to create checkout session", details: error.message });
   }
 };
