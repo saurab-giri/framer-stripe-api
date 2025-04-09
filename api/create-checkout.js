@@ -1,5 +1,5 @@
 // api/create-checkout.js
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const stripe = require("stripe")("sk_test_51NOfYxKa6RpLAVkAs06VQh9xS8Dc1TjxjawN5TxwPSqwMWBq9BnzJFjajNUE5K7bnzvBhbKYrnRbzdHBYf6l18Od00sssjhnvM");
 
 module.exports = async (req, res) => {
   // Set CORS headers for all responses
