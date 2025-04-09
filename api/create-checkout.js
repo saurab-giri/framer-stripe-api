@@ -20,7 +20,7 @@ module.exports = async (req, res) => {
   console.log("Request body:", req.body);
 
   // Validate price
-  const priceInCents = Math.round(Number(price) * 100);
+  const priceInCents = Math.round(parseFloat(price) * 100);
   if (isNaN(priceInCents) || priceInCents <= 0) {
     console.error("Invalid price value:", price);
     return res.status(400).json({ error: "Invalid price: must be a positive number" });
